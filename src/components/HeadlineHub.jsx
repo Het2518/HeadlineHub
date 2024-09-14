@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Menu, RefreshCcw, Search, Bell, User, ChevronDown, Sun, Moon } from 'lucide-react';
+import { Menu, RefreshCcw, Search, Bell, User, ChevronDown, Sun, Moon, PlusSquare, MessageSquare } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import NewsCard from './NewsCard';
 import Sidebar from './Sidebar';
 import StoriesCarousel from './StoriesCarousel';
+import NotificationCenter from './NotificationCenter.jsx';
+import CreatePost from './CreatePost.jsx';
 
 const newsCategories = [
   "All", "Entertainment", "Sports", "Technology", "Startup", "Business",
@@ -18,6 +20,8 @@ const HeadlineHub = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [darkMode, setDarkMode] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [showCreatePost, setShowCreatePost] = useState(false);
 
   useEffect(() => {
     fetchNews();
@@ -92,6 +96,18 @@ const HeadlineHub = () => {
                 <Search size={24} />
               </button>
             )}
+            <button
+              onClick={() => setShowCreatePost(true)}
+              className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none transition-colors duration-300"
+            >
+              <PlusSquare size={24} />
+            </button>
+            <button
+              onClick={() => setShowNotifications(true)}
+              className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none transition-colors duration-300"
+            >
+              <Bell size={24} />
+            </button>
             <button
               onClick={fetchNews}
               className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none transition-colors duration-300"
@@ -175,6 +191,14 @@ const HeadlineHub = () => {
           </div>
         </main>
       </div>
+
+      {showNotifications && (
+        <NotificationCenter onClose={() => setShowNotifications(false)} darkMode={darkMode} />
+      )}
+
+      {showCreatePost && (
+        <CreatePost onClose={() => setShowCreatePost(false)} darkMode={darkMode} />
+      )}
     </div>
   );
 };
