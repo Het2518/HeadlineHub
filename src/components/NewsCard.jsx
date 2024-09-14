@@ -1,18 +1,26 @@
-import React, { useState, useEffect } from 'react';
+// NewsCard.js
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Calendar, Heart, MessageCircle, Share2, Bookmark } from 'lucide-react';
 
-const NewsCard = ({ newsId, newsTitle, newsDate, newsContent, newsImageURL, darkMode, layout = 'grid', author, time, readMoreUrl }) => {
-  const [isLiked, setIsLiked] = useState(false);
-  const [isBookmarked, setIsBookmarked] = useState(false);
-  const [likes, setLikes] = useState(Math.floor(Math.random() * 1000));
-  const [comments, setComments] = useState(Math.floor(Math.random() * 100));
+const NewsCard = ({
+  newsId,
+  newsTitle,
+  newsDate,
+  newsContent,
+  newsImageURL,
+  darkMode,
+  layout = 'grid',
+  author,
+  time,
+  readMoreUrl
+}) => {
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const savedBookmarks = JSON.parse(localStorage.getItem('bookmarks') || '[]');
-    setIsBookmarked(savedBookmarks.includes(newsId));
-  }, [newsId]);
+  const [isLiked, setIsLiked] = React.useState(false);
+  const [isBookmarked, setIsBookmarked] = React.useState(false);
+  const [likes, setLikes] = React.useState(Math.floor(Math.random() * 1000));
+  const [comments, setComments] = React.useState(Math.floor(Math.random() * 100));
 
   const handleLike = (e) => {
     e.stopPropagation();
@@ -35,7 +43,17 @@ const NewsCard = ({ newsId, newsTitle, newsDate, newsContent, newsImageURL, dark
 
   const handleCardClick = () => {
     navigate(`/news/${newsId}`, {
-      state: { newsId, newsTitle, newsDate, newsContent, newsImageURL, author, time, readMoreUrl }
+      state: { 
+        newsId,
+        newsTitle,
+        newsDate,
+        newsContent,
+        newsImageURL,
+        author,
+        time,
+        readMoreUrl
+      },
+      replace: true
     });
   };
 

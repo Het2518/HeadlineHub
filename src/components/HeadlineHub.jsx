@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Menu, RefreshCcw, Search, Bell, User, ChevronDown, Sun, Moon, PlusSquare, MessageSquare } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import NewsCard from './NewsCard';
+import NewsCardSkeleton from './NewsCardSkeleton.jsx';
 import Sidebar from './Sidebar';
 import StoriesCarousel from './StoriesCarousel';
 import NotificationCenter from './NotificationCenter.jsx';
@@ -22,6 +23,8 @@ const HeadlineHub = () => {
   const [showSearch, setShowSearch] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showCreatePost, setShowCreatePost] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
 
   useEffect(() => {
     fetchNews();
@@ -40,6 +43,7 @@ const HeadlineHub = () => {
       const response = await fetch(`https://inshortsapi.vercel.app/news?category=${newsCategory}`);
       const data = await response.json();
       setNewsData(data);
+      setHasMore(data.data.length >= 25); // Assuming 25 is the max number of news items per page
     } catch (error) {
       console.error("Error fetching news:", error);
     } finally {
@@ -47,9 +51,28 @@ const HeadlineHub = () => {
     }
   };
 
-  const filteredNews = useCallback((newsData) => 
-    newsData?.data.filter(news => 
-      news.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+  const loadMoreNews = async () => {
+    if (isLoading || !hasMore) return;
+    setIsLoading(true);
+    try {
+      const response = await fetch(`https://inshortsapi.vercel.app/news?category=${newsCategory}&page=${page + 1}`);
+      const data = await response.json();
+      setNewsData(prevData => ({
+        ...prevData,
+        data: [...prevData.data, ...data.data]
+      }));
+      setPage(prevPage => prevPage + 1);
+      setHasMore(data.data.length >= 25);
+    } catch (error) {
+      console.error("Error fetching more news:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const filteredNews = useCallback((newsData) =>
+    newsData?.data.filter(news =>
+      news.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       news.content.toLowerCase().includes(searchQuery.toLowerCase())
     ), [searchQuery]
   );
@@ -71,54 +94,57 @@ const HeadlineHub = () => {
               onClick={toggleSidebar}
               className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none transition-colors duration-300"
             >
-              <Menu size={24} />
+              <Menu size={20} />
             </button>
-            <Link to="/" className="text-2xl font-bold ml-2 transition-colors duration-300">
+            <Link to="/" className="text-xl font-semibold ml-2 transition-colors duration-300">
               <span className='text-blue-500'>Headline</span>
               <span className={darkMode ? 'text-white' : 'text-gray-800'}>Hub</span>
             </Link>
           </div>
 
           <div className="flex items-center space-x-4">
-            {showSearch ? (
+            <div className={`relative ${showSearch ? 'w-64' : 'w-8'} transition-all duration-300`}>
               <input
                 type="text"
                 placeholder="Search news..."
-                className="py-2 px-4 rounded-full bg-gray-200 dark:bg-gray-700 focus:outline-none transition-colors duration-300"
+                className={`py-2 px-4 rounded-full bg-gray-200 dark:bg-gray-700 focus:outline-none transition-all duration-300 ${
+                  showSearch ? 'w-full opacity-100' : 'w-0 opacity-0'
+                }`}
                 value={searchQuery}
                 onChange={handleSearchChange}
               />
-            ) : (
               <button
-                onClick={() => setShowSearch(true)}
-                className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none transition-colors duration-300"
+                onClick={() => setShowSearch(!showSearch)}
+                className={`absolute right-0 top-0 p-2 rounded-full hover:bg-gray-300 dark:hover:bg-gray-600 focus:outline-none transition-colors duration-300 ${
+                  showSearch ? 'bg-gray-300 dark:bg-gray-600' : ''
+                }`}
               >
-                <Search size={24} />
+                <Search size={20} />
               </button>
-            )}
+            </div>
             <button
               onClick={() => setShowCreatePost(true)}
               className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none transition-colors duration-300"
             >
-              <PlusSquare size={24} />
+              <PlusSquare size={20} />
             </button>
             <button
               onClick={() => setShowNotifications(true)}
               className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none transition-colors duration-300"
             >
-              <Bell size={24} />
+              <Bell size={20} />
             </button>
             <button
               onClick={fetchNews}
               className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none transition-colors duration-300"
             >
-              <RefreshCcw size={24} />
+              <RefreshCcw size={20} />
             </button>
             <button
               onClick={() => setDarkMode(!darkMode)}
               className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none transition-colors duration-300"
             >
-              {darkMode ? <Sun size={24} /> : <Moon size={24} />}
+              {darkMode ? <Sun size={20} /> : <Moon size={20} />}
             </button>
           </div>
         </div>
@@ -143,50 +169,65 @@ const HeadlineHub = () => {
             <h2 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'} mb-4 transition-colors duration-300`}>
               Top Stories
             </h2>
-            {isLoading ? (
-              <div className="flex justify-center items-center h-64">
-                <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 transition-all duration-300 ease-in-out">
-                {filteredNews(newsData)?.slice(0, 6).map((news, index) => (
-                  <NewsCard
-                    key={index}
-                    newsId={index}
-                    newsTitle={news.title}
-                    newsDate={news.date}
-                    newsContent={news.content}
-                    newsImageURL={news.imageUrl}
-                    darkMode={darkMode}
-                  />
-                ))}
-              </div>
-            )}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 transition-all duration-300 ease-in-out">
+              {isLoading
+                ? Array(6).fill().map((_, index) => (
+                    <NewsCardSkeleton key={index} />
+                  ))
+                : filteredNews(newsData)?.slice(0, 6).map((news, index) => (
+                    <NewsCard
+                      key={index}
+                      newsId={index}
+                      newsTitle={news.title}
+                      newsDate={news.date}
+                      newsContent={news.content}
+                      newsImageURL={news.imageUrl}
+                      darkMode={darkMode}
+                      author={news.author}
+                      time={news.time}
+                      readMoreUrl={news.readMoreUrl}
+                    />
+                  ))
+              }
+            </div>
           </div>
 
           <div className="mt-8">
             <h2 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'} mb-4 transition-colors duration-300`}>
               All News
             </h2>
-            {isLoading ? (
-              <div className="flex justify-center items-center h-64">
-                <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div>
-              </div>
-            ) : (
-              <div className="space-y-6 transition-all duration-300 ease-in-out">
-                {filteredNews(newsData)?.slice(6).map((news, index) => (
-                  <NewsCard
-                    key={index + 6}
-                    newsId={index + 6}
-                    newsTitle={news.title}
-                    newsDate={news.date}
-                    newsContent={news.content}
-                    newsImageURL={news.imageUrl}
-                    darkMode={darkMode}
-                    layout="horizontal"
-                  />
-                ))}
-              </div>
+            <div className="space-y-6 transition-all duration-300 ease-in-out">
+              {isLoading
+                ? Array(5).fill().map((_, index) => (
+                    <NewsCardSkeleton key={index} layout="horizontal" />
+                  ))
+                : filteredNews(newsData)?.slice(6).map((news, index) => (
+                    <NewsCard
+                      key={index + 6}
+                      newsId={index + 6}
+                      newsTitle={news.title}
+                      newsDate={news.date}
+                      newsContent={news.content}
+                      newsImageURL={news.imageUrl}
+                      darkMode={darkMode}
+                      layout="horizontal"
+                      author={news.author}
+                      time={news.time}
+                      readMoreUrl={news.readMoreUrl}
+                    />
+                  ))
+              }
+            </div>
+            {hasMore && (
+              <button
+                onClick={loadMoreNews}
+                className={`mt-6 px-4 py-2 rounded-full ${
+                  darkMode ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-500 hover:bg-blue-600'
+                } text-white focus:outline-none transition-colors duration-300`}
+                disabled={isLoading}
+              >
+                {isLoading ? 'Loading...' : 'Load More'}
+              </button>
             )}
           </div>
         </main>

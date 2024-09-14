@@ -73,7 +73,7 @@ const SeeNewsPage = () => {
     <div className={`min-h-screen ${darkMode ? 'dark bg-gray-900 text-white' : 'bg-gray-100'}`}>
       <header className={`${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-md sticky top-0 z-10`}>
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <button onClick={() => navigate(-1)} className="flex items-center">
+          <button onClick={() => navigate('/')} className="flex items-center">
             <ArrowLeft size={20} className="mr-2" />
             <span className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>
               <span className='text-blue-500'>Headline</span>
@@ -93,7 +93,7 @@ const SeeNewsPage = () => {
 
       <main className="container mx-auto px-4 py-8">
         <article className={`rounded-lg shadow-md overflow-hidden ${darkMode ? 'dark' : ''}`}>
-          {newsImageURL && <img src={newsImageURL} alt={newsTitle} className="w-full h-64 object-cover" />}
+          {newsImageURL && <img src={newsImageURL} alt={newsTitle} className="w-full h-64 object-custom-scrollbar" />}
           <div className={`p-6 ${darkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-800'}`}>
             <div className="flex items-center mb-4">
               <div className="w-10 h-10 rounded-full bg-gray-300 mr-3"></div>
